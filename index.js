@@ -1,14 +1,14 @@
   (() => {
     // Apply to both request and response
-    for (const Record of [Request, Response]) {
-      const _clone = Record.prototype.clone;
+    for (const Record of [Request, Response, Blob]) {
+      const _clone = Record.prototype.clone ?? Record.prototype.slice;
       const $clone = (record) =>{
         const recordClone = _clone.call(record);
-        Object.setPrototypeOf(recordClone.headers,record.headers);
+        Object.setPrototypeOf(recordClone.headers ?? {},record.headers ?? {});
         return Object.setPrototypeOf(recordClone,record);
       };
       // Apply to all functions that can consume the body
-      for (const fn of ['arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text']) {
+      for (const fn of ['arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text','stream']) {
         // skip if doesn't exist
         if (typeof Record.prototype[fn] !== 'function') continue;
         // store the native function
