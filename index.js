@@ -1,7 +1,7 @@
   (() => {
     // Apply to both request and response
     for (const Record of [Request, Response]) {
-      const _clone = Record..prototype.clone;
+      const _clone = Record.prototype.clone;
       const $clone = (record) =>{
         const recordClone = _clone.call(record);
         Object.setPrototypeOf(recordClone.headers,record.headers);
