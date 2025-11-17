@@ -5,7 +5,7 @@
       const $clone = (record) =>{
         const recordClone = _clone.call(record);
         Object.setPrototypeOf(recordClone.headers,record.headers);
-        return Object.setProtorypeOf(recordClone,record);
+        return Object.setPrototypeOf(recordClone,record);
       };
       // Apply to all functions that can consume the body
       for (const fn of ['arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text']) {
@@ -59,7 +59,7 @@
   (()=>{
     const _fetch = fetch;
     globalThis.fetch = Object.setPrototypeOf(function fetch(...args){
-      return _fetch.apply(this,args.map(x?.clone?.() ?? x)):
+      return _fetch.apply(this,args.map(x=>x?.clone?.() ?? x));
     },_fetch);
   })();
 
