@@ -1,7 +1,7 @@
   (() => {
     // Apply to both request and response
-    for (const Record of [Request.prototype, Response.prototype]) {
-      const _clone = Record.clone;
+    for (const Record of [Request, Response]) {
+      const _clone = Record..prototype.clone;
       const $clone = (record) =>{
         const recordClone = _clone.call(record);
         Object.setPrototypeOf(recordClone.headers,record.headers);
@@ -10,19 +10,19 @@
       // Apply to all functions that can consume the body
       for (const fn of ['arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text']) {
         // skip if doesn't exist
-        if (typeof Record[fn] !== 'function') continue;
+        if (typeof Record.prototype[fn] !== 'function') continue;
         // store the native function
-        const _fn = Record[fn];
+        const _fn = Record.prototype[fn];
         // Shadow the native function with a wrapper that clones first
-        Record[fn] = Object.setPrototypeOf(function() {
+        Record.prototype[fn] = Object.setPrototypeOf(function() {
           return _fn.call($clone(this));
         }, _fn);
-        Object.defineProperty(Record[fn],'name',{get:()=>fn});
+        Object.defineProperty(Record.prototype[fn],'name',{get:()=>fn});
       }
       // Apply to the getter of the body itself
-      const _body = Object.getOwnPropertyDescriptor(record, 'body').get;
+      const _body = Object.getOwnPropertyDescriptor(Record.prototype, 'body').get;
       if (_body) {
-        Object.defineProperty(record, 'body', {
+        Object.defineProperty(Record.prototype, 'body', {
           get:Object.setPrototypeOf(function body(){
           return _body.call($clone(this));
         },ReadableStream),
