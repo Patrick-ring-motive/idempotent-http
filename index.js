@@ -1,4 +1,5 @@
   (() => {
+    const streams = new WeakSet();
     // Apply to both request and response
     for (const Record of [Request, Response, Blob]) {
       const _clone = Record.prototype.clone ?? Record.prototype.slice;
@@ -15,7 +16,9 @@
         const _fn = Record.prototype[fn];
         // Shadow the native function with a wrapper that clones first
         Record.prototype[fn] = Object.setPrototypeOf(function() {
-          return _fn.call($clone(this));
+          const result = _fn.call($clone(this));
+          streams.add(result);
+          return result;
         }, _fn);
         Object.defineProperty(Record.prototype[fn],'name',{get:()=>fn});
       }
@@ -24,13 +27,32 @@
       if (_body) {
         Object.defineProperty(Record.prototype, 'body', {
           get:Object.setPrototypeOf(function body(){
-          return _body.call($clone(this));
+          const $body = _body.call($clone(this));
+          streams.add($body);
+          return $body;
         },ReadableStream),
         });
       }
       Record.clone = Object.setPrototypeOf(function clone() {
           return $clone(this);
       }, _clone);
+    }
+
+    const $clone = stream =>{
+      if(streams.has(stream)){
+        const $stream = new Response(stream).body;
+        return Object.setPrototypeOf($stream,stream);
+      }else{
+        return stream;
+      }
+    };
+    for(const fn of ['getReader','tee','pipeThrough','pipeTo']){
+      const _fn = ReadableStream.prototype[fn];
+      ReadableStream.prototype[fn] = Object.setPrototypeOf(function(...args) {
+          return _fn.apply($clone(this),args);
+        }, _fn);
+        Object.defineProperty(ReadableStream.prototype[fn],'name',{get:()=>fn});
+      }
     }
   })();
 
