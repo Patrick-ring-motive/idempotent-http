@@ -4,7 +4,7 @@
       const _clone = Record.prototype.clone ?? Record.prototype.slice;
       const $clone = (record) =>{
         const recordClone = _clone.call(record);
-        Object.setPrototypeOf(recordClone.headers ?? {},record.headers ?? {});
+        Object.setPrototypeOf(recordClone.headers ?? {},record.headers ?? Headers.prototype);
         return Object.setPrototypeOf(recordClone,record);
       };
       // Apply to all functions that can consume the body
