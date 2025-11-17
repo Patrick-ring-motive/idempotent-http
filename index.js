@@ -17,6 +17,7 @@
         Record[fn] = Object.setPrototypeOf(function() {
           return _fn.call($clone(this));
         }, _fn);
+        Object.defineProperty(Record[fn],'name',{get:()=>fn});
       }
       // Apply to the getter of the body itself
       const _body = Object.getOwnPropertyDescriptor(record, 'body').get;
