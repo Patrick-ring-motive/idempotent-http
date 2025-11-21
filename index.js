@@ -1,5 +1,6 @@
   (() => {
     const streams = new WeakSet();
+    const consumables = ['headers','arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text','stream'];
     // Apply to both request and response
     for (const Record of [Request, Response, Blob]) {
       const _clone = Record.prototype.clone ?? Record.prototype.slice;
@@ -9,7 +10,7 @@
         return Object.setPrototypeOf(recordClone,record);
       };
       // Apply to all functions that can consume the body
-      for (const fn of ['arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text','stream']) {
+      for (const fn of consumables) {
         // skip if doesn't exist
         if (typeof Record.prototype[fn] !== 'function') continue;
         // store the native function
@@ -36,6 +37,20 @@
       Record.clone = Object.setPrototypeOf(function clone() {
           return $clone(this);
       }, _clone);
+      const _RecordPrototype = Record.prototype;
+      Record.prototype = new Proxy(_RecordPrototype,{
+        get(target,key,receiver){
+          if(consumables.includes(key)){
+            return Reflect.get(...arguments);
+          }
+          const $this = $clone(receiver ?? target);
+          const value = Reflect.get(target,key,$this);
+          if(typeof value === 'function'){
+            return value.bind($this);
+          }
+          return value;
+        }
+      });
     }
 
     const $clone = stream =>{
