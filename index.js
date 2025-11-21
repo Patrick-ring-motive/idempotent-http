@@ -1,6 +1,6 @@
   (() => {
     const streams = new WeakSet();
-    const consumables = ['headers','arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text','stream'];
+    const consumables = ['headers','body','arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text','stream'];
     // Apply to both request and response
     for (const Record of [Request, Response, Blob]) {
       const _clone = Record.prototype.clone ?? Record.prototype.slice;
@@ -28,10 +28,10 @@
       if (_body) {
         Object.defineProperty(Record.prototype, 'body', {
           get:Object.setPrototypeOf(function body(){
-          const $body = _body.call($clone(this));
-          streams.add($body);
-          return $body;
-        },ReadableStream),
+            const $body = _body.call($clone(this));
+            streams.add($body);
+            return $body;
+          },ReadableStream),
         });
       }
       Record.clone = Object.setPrototypeOf(function clone() {
@@ -61,7 +61,8 @@
         return stream;
       }
     };
-    for(const fn of ['getReader','tee','pipeThrough','pipeTo']){
+    const consumables = ['getReader','tee','pipeThrough','pipeTo'];
+    for(const fn of consumables){
       const _fn = ReadableStream.prototype[fn];
       ReadableStream.prototype[fn] = Object.setPrototypeOf(function(...args) {
           return _fn.apply($clone(this),args);
@@ -69,6 +70,20 @@
         Object.defineProperty(ReadableStream.prototype[fn],'name',{get:()=>fn});
       }
     }
+   const _ReadableStreamPrototype = ReadableStream.prototype;
+      ReadableStream.prototype = new Proxy(_ReadableStreamPrototype,{
+        get(target,key,receiver){
+          if(consumables.includes(key)){
+            return Reflect.get(...arguments);
+          }
+          const $this = $clone(receiver ?? target);
+          const value = Reflect.get(target,key,$this);
+          if(typeof value === 'function'){
+            return value.bind($this);
+          }
+          return value;
+        }
+      });
   })();
 
   // clone inputs to the constructors so they don't get consumed
