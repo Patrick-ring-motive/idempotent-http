@@ -1,4 +1,9 @@
   (() => {
+    const proxyPrototype = (proto,handler={}) =>{
+      const target = Object.getPrototypeOf(proto) ?? {};
+      Object.setPrototypeOf(proto,new Proxy(target,handler));
+      return proto;
+    };
     const streams = new WeakSet();
     const consumables = ['headers','body','arrayBuffer', 'blob', 'bytes', 'formData', 'json', 'text','stream'];
     // Apply to both request and response
@@ -37,8 +42,7 @@
       Record.clone = Object.setPrototypeOf(function clone() {
           return $clone(this);
       }, _clone);
-      const _RecordPrototype = Record.prototype;
-      Record.prototype = new Proxy(_RecordPrototype,{
+      proxyPrototype(Record.prototype,{
         get(target,key,receiver){
           if(consumables.includes(key)){
             return Reflect.get(...arguments);
@@ -69,9 +73,8 @@
         }, _fn);
         Object.defineProperty(ReadableStream.prototype[fn],'name',{get:()=>fn});
       }
-    }
-   const _ReadableStreamPrototype = ReadableStream.prototype;
-      ReadableStream.prototype = new Proxy(_ReadableStreamPrototype,{
+  }
+     proxyPrototype(ReadableStream.prototype,{
         get(target,key,receiver){
           if(consumables.includes(key)){
             return Reflect.get(...arguments);
