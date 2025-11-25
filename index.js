@@ -1,11 +1,15 @@
-(() => {
-  const Q = fn =>{
+(()=>{
+
+    const Q = fn =>{
     try{
       return fn?.();
     }catch(e){
       console.warn(e);
     }
   };
+
+(() => {
+
   // Utility: proxyPrototype(proto, handler)
   // Wraps a prototype with a Proxy on its parent prototype.
   // This allows intercepting property access (`get`, etc.) transparently.
@@ -257,4 +261,6 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   globalThis.fetch = Object.setPrototypeOf(function fetch(...args) {
     return _fetch.apply(this, args.map(x => Q(()=>x?.clone?.()) ?? x));
   }, _fetch);
+})();
+
 })();
