@@ -159,6 +159,7 @@
 isRequest = x => x instanceof Request || x?.constructor?.name == 'Request';
 isResponse = x => x instanceof Response || x?.constructor?.name == 'Response';
 isReadableStream = x => x instanceof ReadableStream || x?.constructor?.name == 'ReadableStream';
+isHeaders = x => x instanceof Headers || x?.constructor?.name == 'Headers';
 isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function';
 // ---- Global constructors ----
 // Each constructor clones its inputs to prevent consumption side-effects.
@@ -168,7 +169,27 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   const $Request = class Request extends _Request {
     constructor(...args) {
       // Automatically clone any cloneable input arguments
-      super(...args.map(x => x?.clone?.() ?? x));
+      const $this = super(...args.map(x => x?.clone?.() ?? x));
+      let $that;
+      if(isObject(args[1])){
+        $that = args[1];
+      }else if(isObject(args[0])){
+        $that = args[0];
+      }
+      if(isObject($that)){
+        if(isRequest($that)){
+          Object.setPrototypeOf($this,$that);
+        }else{
+          sandwich($this,$that);
+        }
+        if(isObject($that.body)){
+          if(isReadableStream($that.body)){
+            Object.setPrototypeOf($this.body,$that.body);
+          }else{
+            sandwich($this.body,$that.body);
+          }
+        }
+      }
     }
   };
   globalThis.Request = $Request;
