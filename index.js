@@ -156,7 +156,10 @@
 
 })(); // end main IIFE
 
-
+isRequest = x => x instanceof Request || x?.constructor?.name == 'Request';
+isResponse = x => x instanceof Response || x?.constructor?.name == 'Response';
+isReadableStream = x => x instanceof ReadableStream || x?.constructor?.name == 'ReadableStream';
+isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function';
 // ---- Global constructors ----
 // Each constructor clones its inputs to prevent consumption side-effects.
 
