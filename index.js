@@ -15,6 +15,7 @@
     return proto;
   };
 
+
   const sandwich = (()=>{
     const protos = ['prototype','__proto__'];
     return (object, filling) => {
@@ -52,7 +53,8 @@
 
     // Determine appropriate clone method (slice for Blob, clone for others)
     const _clone = Record.prototype.clone ?? Record.prototype.slice;
-
+    // Patch `.body` getter to auto-clone before returning stream
+    const _body = Object.getOwnPropertyDescriptor(Record.prototype, 'body')?.get;
     // Helper: fully clone a record and restore its prototype chain
     const $clone = (record) => {
       const recordClone = _clone.call(record);
@@ -60,7 +62,7 @@
       Object.setPrototypeOf(recordClone.headers ?? {}, record.headers ?? Headers.prototype);
       // Link the clone prototype to the original for inherited behavior
       try{
-        Object.setPrototypeOf(recordClone.body, record.body);
+        Object.setPrototypeOf(_body.call(recordClone), _body.call(record));
       }catch{}
       return Object.setPrototypeOf(recordClone, record);
     };
@@ -82,8 +84,7 @@
       Object.defineProperty(Record.prototype[fn], 'name', { get: () => fn });
     }
 
-    // Patch `.body` getter to auto-clone before returning stream
-    const _body = Object.getOwnPropertyDescriptor(Record.prototype, 'body')?.get;
+
     if (_body) {
       Object.defineProperty(Record.prototype, 'body', {
         get: Object.setPrototypeOf(function body() {
