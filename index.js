@@ -15,7 +15,6 @@
     return proto;
   };
 
-
   const sandwich = (()=>{
     const protos = ['prototype','__proto__'];
     return (object, filling) => {
@@ -41,7 +40,7 @@
   
   // Track all readable streams produced by consumable methods
   const streams = new WeakSet();
-
+  const orgiginalResponse = Response;
   // List of properties/methods that consume or expose body data
   const consumables = [
     'headers', 'body', 'arrayBuffer', 'blob', 'bytes',
@@ -122,10 +121,10 @@
   }
 
   // Helper to safely clone readable streams when reused
-  const $clone = (stream) => {
+  const $cloneStream = (stream) => {
     if (streams.has(stream)) {
       // Wrap stream in Response to obtain a new readable body
-      const $stream = new Response(stream).body;
+      const $stream = new orgiginalResponse(stream).body;
       // Retain original prototype for type consistency
       return Object.setPrototypeOf($stream, stream);
     } else {
@@ -141,7 +140,7 @@
   for (const fn of streamConsumables) {
     const _fn = ReadableStream.prototype[fn];
     ReadableStream.prototype[fn] = Object.setPrototypeOf(function(...args) {
-      return _fn.apply($clone(this), args); // operate on a cloned stream
+      return _fn.apply($cloneStream(this), args); // operate on a cloned stream
     }, _fn);
 
     Object.defineProperty(ReadableStream.prototype[fn], 'name', { get: () => fn });
@@ -153,7 +152,7 @@
       if (streamConsumables.includes(key)) {
         return Reflect.get(...arguments);
       }
-      const $this = $clone(receiver ?? target);
+      const $this = $cloneStream(receiver ?? target);
       const value = Reflect.get(target, key, $this);
       if (typeof value === 'function') {
         return value.bind($this);
