@@ -180,7 +180,7 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   const $Request = class Request extends _Request {
     constructor(...args) {
       // Automatically clone any cloneable input arguments
-      const $this = super(...args.map(x => Q(()=>x?.clone?.()) ?? x));
+      const $this = Q(()=>super(...args.map(x => Q(()=>x?.clone?.()) ?? x))) ?? super(...args);
       let $that;
       if(isObject(args[1])){
         $that = args[1];
@@ -218,7 +218,7 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   const $Response = class Response extends _Response {
     constructor(...args) {
       // Automatically clone any cloneable input arguments
-      const $this = super(...args.map(x => Q(()=>x?.clone?.()) ?? x));
+      const $this = Q(()=>super(...args.map(x => Q(()=>x?.clone?.()) ?? x))) ?? super(...args);
       let $that;
       if(isObject(args[1])){
         $that = args[1];
