@@ -20,6 +20,9 @@
           return top[key];
         }
       });
+      Object.setPrototypeOf(filling,top);
+      Object.setPrototypeOf(bottom,filling);
+      Object.setPrototypeOf(bottom,object);
       return object;
     };
   })();
