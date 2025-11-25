@@ -130,9 +130,11 @@
       // Wrap stream in Response to obtain a new readable body
       const $stream = new orgiginalResponse(stream,{duplex:'half'}).body;
       // Retain original prototype for type consistency
+        console.log($stream,$stream.locked,stream,stream.locked);
       return Object.setPrototypeOf($stream, stream);
     } else {
       // Non-tracked streams pass through unchanged
+        console.log(stream,stream.locked);
       return stream;
     }
   };
