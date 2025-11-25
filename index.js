@@ -1,4 +1,11 @@
 (() => {
+  const Q = fn =>{
+    try{
+      return fn?.();
+    }catch(e){
+      console.warn(e);
+    }
+  };
   // Utility: proxyPrototype(proto, handler)
   // Wraps a prototype with a Proxy on its parent prototype.
   // This allows intercepting property access (`get`, etc.) transparently.
@@ -8,7 +15,7 @@
     return proto;
   };
 
-  const sandwich = ()=>{
+  const sandwich = (()=>{
     const protos = ['prototype','__proto__'];
     return (object, filling) => {
       try{
@@ -60,7 +67,7 @@
 
     // Patch all known body-consuming functions
     for (const fn of consumables) {
-      if (typeof Record.prototype[fn] !== 'function') continue; // skip if method missing
+      if (typeof Q(()=>Record.prototype[fn]) !== 'function') continue; // skip if method missing
 
       const _fn = Record.prototype[fn]; // save native implementation
 
