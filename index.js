@@ -7,7 +7,8 @@
       console.warn(e);
     }
   };
-
+  const orgiginalResponse = Response;
+  const resBody = Object.getOwnPropertyDescriptor(orgiginalResponse.prototype, 'body')?.get;
 (() => {
 
   // Utility: proxyPrototype(proto, handler)
@@ -44,7 +45,7 @@
   
   // Track all readable streams produced by consumable methods
   const streams = new WeakSet();
-  const orgiginalResponse = Response;
+
   // List of properties/methods that consume or expose body data
   const consumables = [
     'headers', 'body', 'arrayBuffer', 'blob', 'bytes',
@@ -128,7 +129,7 @@
   const $cloneStream = (stream) => {
     if (streams.has(stream)) {
       // Wrap stream in Response to obtain a new readable body
-      const $stream = new orgiginalResponse(stream,{duplex:'half'}).body;
+      const $stream = resBody.call(new orgiginalResponse(stream,{duplex:'half'}));
       // Retain original prototype for type consistency
         console.log($stream,$stream.locked,stream,stream.locked);
       return Object.setPrototypeOf($stream, stream);
