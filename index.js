@@ -8,6 +8,22 @@
     return proto;
   };
 
+  const sandwich = ()=>{
+    const protos = ['prototype','__proto__'];
+    return (object, filling) => {
+      const top = Object.getPrototypeOf(object);
+      const bottom = new Proxy({},{
+        get(target,key,receiver){
+          if(protos.includes(String(key))){
+            return Reflect.construct(...arguments);
+          }
+          return top[key];
+        }
+      });
+      return object;
+    };
+  })();
+  
   // Track all readable streams produced by consumable methods
   const streams = new WeakSet();
 
