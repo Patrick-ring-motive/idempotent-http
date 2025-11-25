@@ -11,18 +11,22 @@
   const sandwich = ()=>{
     const protos = ['prototype','__proto__'];
     return (object, filling) => {
-      const top = Object.getPrototypeOf(object);
-      const bottom = new Proxy({},{
-        get(target,key,receiver){
-          if(protos.includes(String(key))){
-            return Reflect.construct(...arguments);
+      try{
+        const top = Object.getPrototypeOf(object);
+        const bottom = new Proxy({},{
+          get(target,key,receiver){
+            if(protos.includes(String(key))){
+              return Reflect.construct(...arguments);
+            }
+            return top[key];
           }
-          return top[key];
-        }
-      });
-      Object.setPrototypeOf(filling,top);
-      Object.setPrototypeOf(bottom,filling);
-      Object.setPrototypeOf(bottom,object);
+        });
+        Object.setPrototypeOf(filling,top);
+        Object.setPrototypeOf(bottom,filling);
+        Object.setPrototypeOf(bottom,object);
+      }catch(e){
+        console.warn(e);
+      }
       return object;
     };
   })();
@@ -48,6 +52,9 @@
       // Preserve the headers object chain (so patched methods still apply)
       Object.setPrototypeOf(recordClone.headers ?? {}, record.headers ?? Headers.prototype);
       // Link the clone prototype to the original for inherited behavior
+      try{
+        Object.setPrototypeOf(recordClone.body, record.body);
+      }catch{}
       return Object.setPrototypeOf(recordClone, record);
     };
 
