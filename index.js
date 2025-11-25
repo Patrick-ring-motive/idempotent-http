@@ -124,7 +124,7 @@
   const $cloneStream = (stream) => {
     if (streams.has(stream)) {
       // Wrap stream in Response to obtain a new readable body
-      const $stream = new orgiginalResponse(stream).body;
+      const $stream = new orgiginalResponse(stream,{duplex:'half'}).body;
       // Retain original prototype for type consistency
       return Object.setPrototypeOf($stream, stream);
     } else {
@@ -176,7 +176,7 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   const $Request = class Request extends _Request {
     constructor(...args) {
       // Automatically clone any cloneable input arguments
-      const $this = super(...args.map(x => x?.clone?.() ?? x));
+      const $this = super(...args.map(x => Q(()=>x?.clone?.()) ?? x));
       let $that;
       if(isObject(args[1])){
         $that = args[1];
@@ -214,7 +214,7 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   const $Response = class Response extends _Response {
     constructor(...args) {
       // Automatically clone any cloneable input arguments
-      const $this = super(...args.map(x => x?.clone?.() ?? x));
+      const $this = super(...args.map(x => Q(()=>x?.clone?.()) ?? x));
       let $that;
       if(isObject(args[1])){
         $that = args[1];
@@ -255,6 +255,6 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
 (() => {
   const _fetch = fetch;
   globalThis.fetch = Object.setPrototypeOf(function fetch(...args) {
-    return _fetch.apply(this, args.map(x => x?.clone?.() ?? x));
+    return _fetch.apply(this, args.map(x => Q(()=>x?.clone?.()) ?? x));
   }, _fetch);
 })();
