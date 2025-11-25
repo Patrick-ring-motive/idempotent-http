@@ -189,6 +189,13 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
             sandwich($this.body,$that.body);
           }
         }
+        if(isObject($that.headers)){
+          if(isHeaders($that.headers)){
+            Object.setPrototypeOf($this.headers,$that.headers);
+          }else{
+            sandwich($this.headers,$that.headers);
+          }
+        }
       }
     }
   };
@@ -200,7 +207,34 @@ isObject = x => (typeof x === 'object' && x !== null) || typeof x === 'function'
   const $Response = class Response extends _Response {
     constructor(...args) {
       // Automatically clone any cloneable input arguments
-      super(...args.map(x => x?.clone?.() ?? x));
+      const $this = super(...args.map(x => x?.clone?.() ?? x));
+      let $that;
+      if(isObject(args[1])){
+        $that = args[1];
+      }else if(isObject(args[0])){
+        $that = args[0];
+      }
+      if(isObject($that)){
+        if(isResponse($that)){
+          Object.setPrototypeOf($this,$that);
+        }else{
+          sandwich($this,$that);
+        }
+        if(isObject($that.body)){
+          if(isReadableStream($that.body)){
+            Object.setPrototypeOf($this.body,$that.body);
+          }else{
+            sandwich($this.body,$that.body);
+          }
+        }
+        if(isObject($that.headers)){
+          if(isHeaders($that.headers)){
+            Object.setPrototypeOf($this.headers,$that.headers);
+          }else{
+            sandwich($this.headers,$that.headers);
+          }
+        }
+      }
     }
   };
   globalThis.Response = $Response;
